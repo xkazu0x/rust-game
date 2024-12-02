@@ -1,4 +1,8 @@
-use sdl2::{Sdl, EventPump, video::{Window, GLContext, SwapInterval}};
+use sdl2::{
+    Sdl, EventPump,
+    video::{Window, GLContext, SwapInterval},
+    event::{Event, WindowEvent},
+};
 use std::{ffi::{CStr, CString}, ptr::{null, null_mut}};
 use gl::types::{GLuint, GLint, GLchar, GLenum};
 
@@ -21,6 +25,7 @@ impl SxWindow {
         
         let handle = video_subsystem
             .window(title, width, height)
+            .resizable()
             .position_centered()
             .opengl()
             .build()
@@ -303,10 +308,15 @@ fn main() -> Result<(), String> {
     'running: loop {
         for event in window.event.poll_iter() {
             match event {
-                sdl2::event::Event::Quit {..} => break 'running,
-                sdl2::event::Event::KeyDown {
+                Event::Quit {..} => break 'running,
+                Event::KeyDown {
                     keycode: Some(sdl2::keyboard::Keycode::Escape), ..} => {
                     break 'running
+                    },
+                Event::Window { win_event, .. } => {
+                    if let WindowEvent::Resized(width, height) = win_event {
+                        unsafe { gl::Viewport(0, 0, width, height); }
+                    }
                 },
                 _ => {}
             }
